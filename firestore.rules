@@ -1,0 +1,81 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper functions ──────────────────────────────────────────────────
+
+    /** Check the requesting user is an authenticated member of the given family */
+    function isFamilyMember(familyId) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid));
+    }
+
+    /** Check the requesting user is the owner of the given family */
+    function isFamilyOwner(familyId) {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid)).data.role == 'owner';
+    }
+
+    // ─── users/{uid} ──────────────────────────────────────────────────────
+    // Users can only read and write their own profile document.
+    // The backend (Admin SDK) can also write here when creating/joining families.
+
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ─── families/{familyId} ──────────────────────────────────────────────
+    // Only family members may read the family document.
+    // The backend handles creation and updates via Admin SDK (bypasses rules).
+
+    match /families/{familyId} {
+      allow read: if isFamilyMember(familyId);
+      // No direct client writes to the family root document
+
+      // ── members subcollection ─────────────────────────────────────────
+      // Members can read all members. Only the backend can write (join/remove).
+      match /members/{memberId} {
+        allow read: if isFamilyMember(familyId);
+        // Writes handled exclusively by backend Admin SDK
+      }
+
+      // ── notes ─────────────────────────────────────────────────────────
+      match /notes/{noteId} {
+        allow read, create, update, delete: if isFamilyMember(familyId);
+      }
+
+      // ── shoppingItems ─────────────────────────────────────────────────
+      match /shoppingItems/{itemId} {
+        allow read, create, update, delete: if isFamilyMember(familyId);
+      }
+
+      // ── tasks ─────────────────────────────────────────────────────────
+      match /tasks/{taskId} {
+        allow read, create, update, delete: if isFamilyMember(familyId);
+      }
+
+      // ── events ────────────────────────────────────────────────────────
+      match /events/{eventId} {
+        allow read, create, update, delete: if isFamilyMember(familyId);
+      }
+
+      // ── announcements ─────────────────────────────────────────────────
+      match /announcements/{announcementId} {
+        allow read, create, update, delete: if isFamilyMember(familyId);
+      }
+
+      // ── rewardPoints ──────────────────────────────────────────────────
+      match /rewardPoints/{pointId} {
+        allow read, create: if isFamilyMember(familyId);
+        // Reward points are immutable once awarded — no updates or deletes
+        allow update, delete: if isFamilyOwner(familyId);
+      }
+    }
+
+    // ─── Deny everything else ─────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

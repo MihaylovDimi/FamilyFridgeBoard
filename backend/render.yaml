@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: family-fridge-board-api
+    runtime: node
+    region: frankfurt   # Closest to Cambridge UK
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: node dist/app.js
+    plan: free
+
+    # Environment variables — set these in the Render dashboard
+    # Never commit real values to version control
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: PORT
+        value: 10000   # Render assigns a port; this is the default
+
+      # Set these in the Render environment variables dashboard:
+      # FIREBASE_PROJECT_ID
+      # FIREBASE_CLIENT_EMAIL
+      # FIREBASE_PRIVATE_KEY
+      # OPENWEATHERMAP_API_KEY
+      # FRONTEND_URL  (your Vercel deployment URL)
+
+    healthCheckPath: /health
+    autoDeploy: true
