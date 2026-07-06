@@ -39,7 +39,7 @@ const QUOTES: QuoteResponse[] = [
 ];
 
 /** Returns a deterministic quote based on the day of the year (rotates daily) */
-function getDailyQuote(): QuoteResponse {
+function pickDailyQuote(): QuoteResponse {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
   const diff = now.getTime() - start.getTime();
@@ -82,6 +82,6 @@ export async function getWeather(req: Request, res: Response): Promise<void> {
  * Returns today's motivational quote. No auth required.
  */
 export async function getDailyQuote(_req: Request, res: Response): Promise<void> {
-  const quote = getDailyQuote();
+  const quote = pickDailyQuote();
   res.status(200).json({ success: true, data: quote } satisfies ApiResponse<QuoteResponse>);
 }
