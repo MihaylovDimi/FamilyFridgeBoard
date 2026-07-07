@@ -13,8 +13,7 @@ function initFirebaseAdmin(): void {
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-  console.log('KEY STARTS:', JSON.stringify(privateKey?.substring(0, 40)));
-console.log('KEY HAS REAL NEWLINES:', privateKey?.includes('\n'));
+  
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error(
