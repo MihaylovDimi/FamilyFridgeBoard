@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuthStore } from '../store/authStore';
+import { setupPushNotifications } from '../services/notifications';
 import type { Member } from '../types';
 
 /**
@@ -10,10 +11,14 @@ import type { Member } from '../types';
  * Should be mounted once at the App level after authentication.
  */
 export function useFamily(): void {
-  const { familyId, setMembers } = useAuthStore();
+  const { familyId, uid, setMembers } = useAuthStore();
 
   useEffect(() => {
     if (!familyId) return;
+    // Set up push notifications once we have a family and user
+    if (uid) {
+      setupPushNotifications(familyId, uid);
+    }
 
     const membersRef = collection(db, 'families', familyId, 'members');
     const unsubscribe = onSnapshot(membersRef, (snapshot) => {
