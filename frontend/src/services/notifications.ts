@@ -37,9 +37,22 @@ export async function setupPushNotifications(
       '/firebase-messaging-sw.js'
     );
 
-    // Wait until the service worker is fully active before subscribing
-    await navigator.serviceWorker.ready;
-    console.log('Firebase SW active, getting token...');
+    // Wait specifically for THIS registration to become active
+    await new Promise<void>((resolve) => {
+      if (swRegistration.active) {
+        resolve();
+        return;
+      }
+      const sw = swRegistration.installing || swRegistration.waiting;
+      if (!sw) {
+        resolve();
+        return;
+      }
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'activated') resolve();
+      });
+    });
+    console.log('Firebase SW confirmed active, getting token...');
 
     // Get the device token
     const messaging = getMessaging(app);
