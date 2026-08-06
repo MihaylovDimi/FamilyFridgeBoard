@@ -36,7 +36,10 @@ export async function setupPushNotifications(
     const swRegistration = await navigator.serviceWorker.register(
       '/firebase-messaging-sw.js'
     );
-    console.log('Firebase SW registered', swRegistration);
+
+    // Wait until the service worker is fully active before subscribing
+    await navigator.serviceWorker.ready;
+    console.log('Firebase SW active, getting token...');
 
     // Get the device token
     const messaging = getMessaging(app);
