@@ -10,22 +10,36 @@ export async function setupPushNotifications(
   uid: string
 ): Promise<boolean> {
   try {
-    // Check the browser supports FCM
-    const supported = await isSupported();
-    if (!supported) {
-      console.warn('This browser does not support push notifications');
+    // Check core browser capabilities directly
+    if (!('Notification' in window)) {
+      console.warn('Notifications not available in this browser');
+      return false;
+    }
+    if (!('serviceWorker' in navigator)) {
+      console.warn('Service workers not available in this browser');
       return false;
     }
 
-    if (!('Notification' in window)) return false;
+    // Firebase support check (log but do not block — isSupported can be over-strict)
+    const supported = await isSupported();
+    console.log('FCM isSupported():', supported);
 
     // Ask for permission
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return false;
 
     // Get the device token
+   // Register the Firebase messaging service worker explicitly
+    const swRegistration = await navigator.serviceWorker.register(
+      '/firebase-messaging-sw.js'
+    );
+
+    // Get the device token
     const messaging = getMessaging(app);
-    const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+    const token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: swRegistration,
+    });
 
     if (!token) {
       console.warn('Failed to obtain device token');
