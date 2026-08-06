@@ -32,14 +32,15 @@ export async function setupPushNotifications(
       return false;
     }
 
-    // Wait for any existing service worker (PWA) to be ready first
+   console.log('Step 1: waiting for SW ready...');
     await navigator.serviceWorker.ready;
+    console.log('Step 2: SW ready, registering Firebase SW...');
 
-    // Register the Firebase messaging service worker on its own scope
     const swRegistration = await navigator.serviceWorker.register(
       '/firebase-messaging-sw.js',
       { scope: '/firebase-cloud-messaging-push-scope' }
     );
+    console.log('Step 3: Firebase SW registered', swRegistration);
 
     // Get the device token
     const messaging = getMessaging(app);
