@@ -1,7 +1,7 @@
 import { getMessaging, getToken, isSupported } from 'firebase/messaging';
 import { doc, setDoc, arrayUnion } from 'firebase/firestore';
 import app, { db } from './firebase';
-
+// build marker v2 - force new bundle
 const VAPID_KEY = 'BJLdIq_fCBX5nIYcUdg2DKelCwwtFXuTa9AuMjzOGHi6OyiorYL_LxJ_kgCXygrWhE8z4du31RuEXV2wSZNbJV8';
 
 /** Requests permission and saves this device's push token for the user */
