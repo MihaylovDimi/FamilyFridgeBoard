@@ -28,10 +28,13 @@ export async function setupPushNotifications(
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return false;
 
-    // Get the device token
-   // Register the Firebase messaging service worker explicitly
+    // Wait for any existing service worker (PWA) to be ready first
+    await navigator.serviceWorker.ready;
+
+    // Register the Firebase messaging service worker on its own scope
     const swRegistration = await navigator.serviceWorker.register(
-      '/firebase-messaging-sw.js'
+      '/firebase-messaging-sw.js',
+      { scope: '/firebase-cloud-messaging-push-scope' }
     );
 
     // Get the device token
