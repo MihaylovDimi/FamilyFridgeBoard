@@ -24,9 +24,13 @@ export async function setupPushNotifications(
     const supported = await isSupported();
     console.log('FCM isSupported():', supported);
 
-    // Ask for permission
+   // Ask for permission
     const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return false;
+    console.log('Notification permission:', permission);
+    if (permission !== 'granted') {
+      console.warn('Permission not granted, stopping. Value:', permission);
+      return false;
+    }
 
     // Wait for any existing service worker (PWA) to be ready first
     await navigator.serviceWorker.ready;
