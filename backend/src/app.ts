@@ -17,6 +17,10 @@ import { errorHandler, notFound } from './middleware/error.middleware';
 const app = express();
 const PORT = parseInt(process.env.PORT ?? '3001', 10);
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? FRONTEND_URL)
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 // ─── Security & Parsing Middleware ────────────────────────────────────────────
 
@@ -24,7 +28,14 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: [FRONTEND_URL, /\.vercel\.app$/],
+    origin: (origin, callback) => {
+      // Requests with no Origin header (curl, health checks) are allowed
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error(`Origin not allowed by CORS: ${origin}`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

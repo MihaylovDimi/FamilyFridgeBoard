@@ -1,4 +1,5 @@
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { randomInt } from 'crypto';
 import { db } from './firebase.admin';
 import {
   FamilyDoc,
@@ -29,9 +30,23 @@ const DEFAULT_SETTINGS: FamilySettings = {
 function generateInviteCode(): string {
   let code = '';
   for (let i = 0; i < 6; i++) {
-    code += INVITE_CODE_CHARS[Math.floor(Math.random() * INVITE_CODE_CHARS.length)];
+    code += INVITE_CODE_CHARS[randomInt(INVITE_CODE_CHARS.length)];
   }
   return code;
+}
+
+/** Generate an invite code that is not already in use by another family */
+async function generateUniqueInviteCode(): Promise<string> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = generateInviteCode();
+    const clash = await db
+      .collection('families')
+      .where('inviteCode', '==', code)
+      .limit(1)
+      .get();
+    if (clash.empty) return code;
+  }
+  throw new Error('Could not generate a unique invite code. Please try again.');
 }
 
 /** Pick a deterministic avatar colour based on user index */
@@ -51,7 +66,7 @@ export async function createFamily(
   displayName: string,
   familyName: string
 ): Promise<FamilyResponse> {
-  const inviteCode = generateInviteCode();
+  const inviteCode = await generateUniqueInviteCode();
 
   // Create the family document
   const familyRef = db.collection('families').doc();
@@ -224,7 +239,7 @@ export async function regenerateInviteCode(
     throw new Error('Only the family owner can regenerate the invite code.');
   }
 
-  const newCode = generateInviteCode();
+  const newCode = await generateUniqueInviteCode();
   await db.collection('families').doc(familyId).update({ inviteCode: newCode });
   return newCode;
 }

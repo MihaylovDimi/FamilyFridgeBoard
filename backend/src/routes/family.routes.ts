@@ -7,6 +7,7 @@ import {
   regenerateInvite,
   removeMember,
 } from '../controllers/family.controller';
+import { joinLimiter } from '../middleware/rateLimit.middleware';
 
 const router = Router();
 
@@ -14,7 +15,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.post('/', createFamily);
-router.post('/join', joinFamily);
+router.post('/join',joinLimiter, joinFamily);
 router.get('/:id', getFamily);
 router.post('/:id/invite', regenerateInvite);
 router.delete('/:id/members/:uid', removeMember);
